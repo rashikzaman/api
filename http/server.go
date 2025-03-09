@@ -14,6 +14,7 @@ func RunHTTPServer(app application.Application, redisStore redis.Store) {
 	r.Use(sessions.Sessions("user_session", redisStore))
 
 	routes.AuthRoutes(r, app)
+	routes.PrivateRoutes(r, app)
 
 	_ = r.Run(":" + app.Config.GetHTTPPort())
 }
