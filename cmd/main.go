@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"rashikzaman/api/application"
 	"rashikzaman/api/config"
 	"rashikzaman/api/db"
@@ -11,6 +12,8 @@ import (
 func main() {
 	app := application.Application{}
 	logger := log.NewLogger()
+
+	fmt.Println("DB CONFIG", config.GetDBConfig())
 
 	db, err := db.InitDB(config.GetDBConfig())
 	if err != nil {
