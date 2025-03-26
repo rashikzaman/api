@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"rashikzaman/api/config"
 	"rashikzaman/api/models"
 	"rashikzaman/api/services"
 	"time"
@@ -93,7 +92,7 @@ func (ac *Controller) ClerkWebHook(c *gin.Context) {
 	}
 
 	// Create a new Svix webhook instance
-	wh, err := svix.NewWebhook(config.GetClerkSigningSecretKey())
+	wh, err := svix.NewWebhook(ac.App.Config.GetClerkSigningSecretKey())
 	if err != nil {
 		log.Printf("Error creating Svix webhook: %v", err)
 		c.Status(http.StatusBadRequest)

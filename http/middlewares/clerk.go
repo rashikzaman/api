@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"rashikzaman/api/application"
-	"rashikzaman/api/config"
 	"rashikzaman/api/models"
 	"strings"
 
@@ -20,7 +19,7 @@ func ClerkMiddleware(app *application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sessionToken := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
 
-		clerk.SetKey(config.GetClerkSecretKey())
+		clerk.SetKey(app.Config.GetClerkSecretKey())
 
 		// verify the session
 		claims, err := jwt.Verify(c.Request.Context(), &jwt.VerifyParams{

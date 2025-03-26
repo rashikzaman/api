@@ -3,7 +3,6 @@ package http
 import (
 	"fmt"
 	"rashikzaman/api/application"
-	"rashikzaman/api/config"
 	"rashikzaman/api/http/routes"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +19,7 @@ func RunHTTPServer(app application.Application) {
 	routes.CategoryRoutes(r, app)
 	routes.SkillsRoutes(r, app)
 
-	_ = r.Run(":" + config.GetHTTPPort())
+	_ = r.Run(":" + app.Config.GetHTTPPort())
 }
 
 func CORSMiddleware() gin.HandlerFunc {

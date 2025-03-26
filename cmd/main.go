@@ -13,7 +13,12 @@ func main() {
 	app := application.Application{}
 	logger := log.NewLogger()
 
-	fmt.Println("DB CONFIG", config.GetDBConfig())
+	config, err := config.InitConfig("../.env")
+	if err != nil {
+		logger.Fatal(err, err.Error())
+	}
+
+	fmt.Println(config.GetDBConfig())
 
 	db, err := db.InitDB(config.GetDBConfig())
 	if err != nil {
@@ -26,6 +31,7 @@ func main() {
 		return
 	}
 
+	//app.Config = config
 	app.DB = db
 
 	http.RunHTTPServer(app)
