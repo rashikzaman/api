@@ -3,6 +3,9 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"rashikzaman/api/application"
+	"rashikzaman/api/config"
+	"rashikzaman/api/models"
 	"strings"
 
 	"github.com/clerk/clerk-sdk-go/v2"
@@ -13,16 +16,15 @@ import (
 )
 
 // ClerkMiddleware creates a new Clerk session middleware for Gin
-func ClerkMiddleware(secretKey string) gin.HandlerFunc {
+func ClerkMiddleware(app *application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sessionToken := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
 
-		clerk.SetKey(secretKey)
+		clerk.SetKey(config.GetClerkSecretKey())
 
-		// Verify the session
+		// verify the session
 		claims, err := jwt.Verify(c.Request.Context(), &jwt.VerifyParams{
 			Token: sessionToken,
-			//JWKSClient: jwksClient,
 		})
 		if err != nil {
 			fmt.Println(sessionToken)
@@ -31,14 +33,21 @@ func ClerkMiddleware(secretKey string) gin.HandlerFunc {
 			return
 		}
 
-		usr, err := user.Get(c.Request.Context(), claims.Subject)
+		clerkUser, err := user.Get(c.Request.Context(), claims.Subject)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: " + err.Error()})
 			c.Abort()
 			return
 		}
 
-		c.Set("user", usr)
+		user, err := models.GetUserByClerkID(c, app.DB, clerkUser.ID)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: " + err.Error()})
+			c.Abort()
+			return
+		}
+
+		c.Set("user", user)
 
 		c.Next()
 	}

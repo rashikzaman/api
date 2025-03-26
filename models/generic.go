@@ -14,6 +14,7 @@ import (
 type QueryParam struct {
 	Relations  []string
 	Pagination utils.PaginationConfig
+	Alias      string
 }
 
 func Create(ctx context.Context, db bun.IDB, model interface{}) error {
@@ -51,10 +52,33 @@ func Select(ctx context.Context, db bun.IDB, models interface{}, queryParam Quer
 	return count, nil
 }
 
+func SelectAll(ctx context.Context, db bun.IDB, models interface{}, queryParam QueryParam) error {
+	query := db.NewSelect().
+		Model(models)
+
+	if len(queryParam.Relations) != 0 {
+		for _, relation := range queryParam.Relations {
+			query.Relation(relation)
+		}
+	}
+
+	err := query.Scan(ctx)
+	if err != nil {
+		return errors.Wrap(err, err.Error())
+	}
+
+	return nil
+}
+
 func SelectByID(ctx context.Context, db bun.IDB, id uuid.UUID, model interface{}, queryParam QueryParam) error {
 	query := db.NewSelect().
-		Model(model).
-		Where("id = ?", id)
+		Model(model)
+
+	if queryParam.Alias != "" {
+		query.Where(queryParam.Alias+".id = ?", id)
+	} else {
+		query.Where("id = ?", id)
+	}
 
 	if len(queryParam.Relations) != 0 {
 		for _, relation := range queryParam.Relations {

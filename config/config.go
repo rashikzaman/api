@@ -1,66 +1,26 @@
 package config
 
 import (
-	"github.com/caarlos0/env/v11"
-	"github.com/dotenv-org/godotenvvault"
+	"os"
 )
 
-type envConfig struct {
-	HTTPPort       string `env:"HTTP_PORT"`
-	DBConfig       string `env:"DB_CONFIG"`
-	Environment    string `env:"ENVIRONMENT"`
-	SessionSecret  string `env:"SESSION_SECRET"`
-	RedisHost      string `env:"REDIS_HOST"`
-	RedisPassword  string `env:"REDIS_PASSWORD"`
-	ClerkSecretKey string `env:"CLERK_SECRET_KEY"`
+func GetHTTPPort() string {
+	return os.Getenv("HTTP_PORT")
 }
 
-type Config struct {
-	envConfig envConfig
+func GetDBConfig() string {
+	//return config.envConfig.DBConfig
+	return os.Getenv("DB_CONFIG")
 }
 
-func InitConfig(filepath string) (Config, error) {
-	config := Config{}
-	envConfig := envConfig{}
-
-	err := godotenvvault.Load(filepath)
-	if err != nil {
-		return config, err
-	}
-
-	if err := env.Parse(&envConfig); err != nil {
-		return config, err
-	}
-
-	config.envConfig = envConfig
-
-	return config, nil
+func GetEnvironment() string {
+	return os.Getenv("ENVIRONMENT")
 }
 
-func (config Config) GetHTTPPort() string {
-	return config.envConfig.HTTPPort
+func GetClerkSecretKey() string {
+	return os.Getenv("CLERK_SIGNING_SECRET_KEY")
 }
 
-func (config Config) GetDBConfig() string {
-	return config.envConfig.DBConfig
-}
-
-func (config Config) GetEnvironment() string {
-	return config.envConfig.Environment
-}
-
-func (config Config) GetSessionSecret() string {
-	return config.envConfig.SessionSecret
-}
-
-func (config Config) GetRedisHost() string {
-	return config.envConfig.RedisHost
-}
-
-func (config Config) GetRedisPassword() string {
-	return config.envConfig.RedisPassword
-}
-
-func (config Config) GetClerkSecretKey() string {
-	return config.envConfig.ClerkSecretKey
+func GetClerkSigningSecretKey() string {
+	return os.Getenv("DB_CONFIG")
 }
