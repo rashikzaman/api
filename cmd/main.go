@@ -30,6 +30,7 @@ func main() {
 
 	//app.Config = config
 	app.DB = db
+	app.Config = config
 
 	http.RunHTTPServer(app)
 }
