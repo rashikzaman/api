@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/caarlos0/env/v11"
 	"github.com/dotenv-org/godotenvvault"
 )
@@ -22,22 +24,34 @@ type Config struct {
 
 func InitConfig(filepath string) (Config, error) {
 	config := Config{}
-	envConfig := envConfig{}
+	envCfg := envConfig{}
 
+	// load from filepath
 	err := godotenvvault.Load(filepath)
 	if err != nil {
-		return config, err
+		// fallback to os.Getenv if filepath fails, this is for dokku
+		envCfg = envConfig{
+			HTTPPort:              os.Getenv("HTTP_PORT"),
+			DBConfig:              os.Getenv("DB_CONFIG"),
+			Environment:           os.Getenv("ENVIRONMENT"),
+			SessionSecret:         os.Getenv("SESSION_SECRET"),
+			RedisHost:             os.Getenv("REDIS_HOST"),
+			RedisPassword:         os.Getenv("REDIS_PASSWORD"),
+			ClerkSecretKey:        os.Getenv("CLERK_SECRET_KEY"),
+			ClerkSigningSecretKey: os.Getenv("CLERK_SIGNING_SECRET_KEY"),
+		}
+	} else {
+		// If filepath loading succeeds, parse env vars
+		if err := env.Parse(&envCfg); err != nil {
+			return config, err
+		}
 	}
 
-	if err := env.Parse(&envConfig); err != nil {
-		return config, err
-	}
-
-	config.envConfig = envConfig
-
+	config.envConfig = envCfg
 	return config, nil
 }
 
+// Getter methods remain the same as in the previous implementation
 func (config Config) GetHTTPPort() string {
 	return config.envConfig.HTTPPort
 }

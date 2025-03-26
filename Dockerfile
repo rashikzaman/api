@@ -2,4 +2,5 @@ FROM golang:1.23.2
 WORKDIR /build
 COPY . /build
 ENV CGO_ENABLED=0
-RUN go run test.go
+
+CMD ["make", "run"]
