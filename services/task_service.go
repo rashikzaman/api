@@ -1,11 +1,11 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"rashikzaman/api/models"
 	"rashikzaman/api/utils"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
@@ -13,6 +13,16 @@ import (
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+)
+
+const (
+	S3BucketName = "act-local"
+	S3Region     = "ap-southeast-1"
+	S3FolderPath = "uploads/images"
 )
 
 type Filter struct {
@@ -30,6 +40,7 @@ type Filter struct {
 
 func CreateTask(
 	ctx context.Context, db bun.IDB, taskBody *models.Task, userID uuid.UUID,
+	awsAccessKey, awsSecretAccessKey string,
 ) error {
 	taskBody.Location = models.PostgisGeometry{Geometry: orb.Point{taskBody.Longitude, taskBody.Latitude}, SRID: 4326}
 	taskBody.UserID = userID
@@ -39,32 +50,71 @@ func CreateTask(
 		return errors.Wrap(err, err.Error())
 	}
 
-	for _, media := range taskBody.Media {
-		uploadDir := "../uploads/images"
-		filePath, err := utils.SaveBase64Image(media.Base64, uploadDir)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return err
+	cfg := aws.Config{
+		Region:      "ap-southeast-1",
+		Credentials: credentials.NewStaticCredentialsProvider(awsAccessKey, awsSecretAccessKey, ""),
+	}
+
+	if awsAccessKey != "" && awsSecretAccessKey != "" {
+		for _, media := range taskBody.Media {
+			decoded, err := utils.DecodeBase64Image(media.Base64)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return err
+			}
+
+			mimetype, err := utils.GetMimeTypeFromBase64(media.Base64)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return err
+			}
+
+			fileExt := ""
+			switch mimetype {
+			case "image/jpeg":
+				fileExt = ".jpg"
+			case "image/png":
+				fileExt = ".png"
+			case "image/gif":
+				fileExt = ".gif"
+			default:
+				fileExt = ".bin"
+			}
+
+			filename := fmt.Sprintf("%s/%s%s", S3FolderPath, uuid.New().String(), fileExt)
+
+			client := s3.NewFromConfig(cfg)
+
+			uploadParams := &s3.PutObjectInput{
+				Bucket:        aws.String(S3BucketName),
+				Key:           aws.String(filename),
+				Body:          bytes.NewReader(decoded),
+				ContentType:   aws.String(mimetype),
+				ContentLength: aws.Int64(int64(len(decoded))),
+			}
+
+			// Upload to S3
+			_, err = client.PutObject(ctx, uploadParams)
+			if err != nil {
+				fmt.Printf("Error uploading to S3: %v\n", err)
+				return errors.Wrap(err, "failed to upload file to S3")
+			}
+
+			// Generate the S3 URL for the uploaded file
+			s3URL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", S3BucketName, S3Region, filename)
+
+			newMedia := &models.TaskMedia{}
+			newMedia.Link = s3URL
+			newMedia.MimeType = mimetype
+			newMedia.TaskID = taskBody.ID
+
+			// Save media info to database
+			_, err = db.NewInsert().Model(newMedia).Exec(ctx)
+			if err != nil {
+				return errors.Wrap(err, err.Error())
+			}
+
 		}
-
-		mimetype, err := utils.GetMimeTypeFromBase64(media.Base64)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return err
-		}
-
-		filePath = strings.Trim(filePath, ".")
-
-		newMedia := &models.TaskMedia{}
-		newMedia.Link = filePath
-		newMedia.MimeType = mimetype
-		newMedia.TaskID = taskBody.ID
-
-		_, err = db.NewInsert().Model(newMedia).Exec(ctx)
-		if err != nil {
-			return errors.Wrap(err, err.Error())
-		}
-
 	}
 
 	return nil

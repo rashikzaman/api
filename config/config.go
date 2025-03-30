@@ -17,6 +17,11 @@ type envConfig struct {
 	RedisPassword         string `env:"REDIS_PASSWORD"`
 	ClerkSecretKey        string `env:"CLERK_SECRET_KEY"`
 	ClerkSigningSecretKey string `env:"CLERK_SIGNING_SECRET_KEY"`
+	AWSAccessKeyID        string `env:"AWS_ACCESS_KEY_ID"`
+	AWSSecretAccessKey    string `env:"AWS_SECRET_ACCESS_KEY"`
+	TwilioAccountSID      string `env:"TWILIO_ACCOUNT_SID"`
+	TwilioAuthToken       string `env:"TWILIO_AUTH_TOKEN"`
+	TwilioPhoneNumber     string `env:"TWILIO_PHONE_NUMBER"`
 }
 
 type Config struct {
@@ -41,6 +46,11 @@ func InitConfig(filepath string) (Config, error) {
 			RedisPassword:         os.Getenv("REDIS_PASSWORD"),
 			ClerkSecretKey:        os.Getenv("CLERK_SECRET_KEY"),
 			ClerkSigningSecretKey: os.Getenv("CLERK_SIGNING_SECRET_KEY"),
+			AWSAccessKeyID:        os.Getenv("AWS_ACCESS_KEY_ID"),
+			AWSSecretAccessKey:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			TwilioAccountSID:      os.Getenv("TWILIO_ACCOUNT_SID"),
+			TwilioAuthToken:       os.Getenv("TWILIO_AUTH_TOKEN"),
+			TwilioPhoneNumber:     os.Getenv("TWILIO_PHONE_NUMBER"),
 		}
 	} else {
 		// If filepath loading succeeds, parse env vars
@@ -88,4 +98,24 @@ func (config Config) GetClerkSecretKey() string {
 
 func (config Config) GetClerkSigningSecretKey() string {
 	return config.envConfig.ClerkSigningSecretKey
+}
+
+func (config Config) GetAWSAccessKey() string {
+	return config.envConfig.AWSAccessKeyID
+}
+
+func (config Config) GetAWSSecretAccessKey() string {
+	return config.envConfig.AWSSecretAccessKey
+}
+
+func (config Config) GetTwilioAccountSID() string {
+	return config.envConfig.TwilioAccountSID
+}
+
+func (config Config) GetTwilioAuthToken() string {
+	return config.envConfig.TwilioAuthToken
+}
+
+func (config Config) GetTwilioPhoneNumber() string {
+	return config.envConfig.TwilioPhoneNumber
 }

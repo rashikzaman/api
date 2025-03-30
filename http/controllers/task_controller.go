@@ -26,7 +26,14 @@ func (ac *Controller) CreateTask(c *gin.Context) {
 	user := GetUser(c)
 
 	err := models.WithTransaction(c, ac.App.DB, func(tx *bun.Tx) error {
-		err := services.CreateTask(c, tx, task, user.ID)
+		err := services.CreateTask(c, tx, task, user.ID, ac.App.Config.GetAWSAccessKey(), ac.App.Config.GetAWSSecretAccessKey())
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		//err = services.SendSMS("+8801873980799", "hello from act-local", ac.App.Config.GetTwilioAccountSID(), ac.App.Config.GetTwilioPhoneNumber(), ac.App.Config.GetTwilioAuthToken())
+
 		return err
 	})
 

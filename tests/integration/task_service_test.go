@@ -51,7 +51,7 @@ func (s *TestSuite) TestCreateTask() {
 		}
 
 		// Test function
-		err = services.CreateTask(ctx, tx, taskBody, user.ID)
+		err = services.CreateTask(ctx, tx, taskBody, user.ID, s.application.Config.GetAWSAccessKey(), s.application.Config.GetAWSSecretAccessKey())
 		require.NoError(s.T(), err)
 
 		// Verify task was created
