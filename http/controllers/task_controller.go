@@ -135,6 +135,14 @@ func (ac *Controller) FetchTasks(c *gin.Context) {
 		subscribeUserId = GetUser(c).ID
 	}
 
+	distance, err := strconv.ParseInt(c.Query("distance"), 10, 64)
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatus(http.StatusBadRequest)
+
+		return
+	}
+
 	tasks, count, err := services.FetchTasks(
 		c, ac.App.DB,
 		models.QueryParam{
@@ -142,12 +150,14 @@ func (ac *Controller) FetchTasks(c *gin.Context) {
 			Relations:  []string{"User", "Category", "Media", "SubscribedUsers"},
 		},
 		services.Filter{
-			CategoryIDs:     categoryIDArray,
-			Skills:          skillsArray,
-			Longitude:       longitude,
-			Latitude:        latitude,
-			SubscribeUserID: subscribeUserId,
-			SearchTerm:      c.Query("search_term"),
+			CategoryIDs:      categoryIDArray,
+			Skills:           skillsArray,
+			Longitude:        longitude,
+			Latitude:         latitude,
+			SubscribeUserID:  subscribeUserId,
+			SearchTerm:       c.Query("search_term"),
+			ApplyBlockFilter: true,
+			Distance:         int(distance),
 		},
 	)
 	if err != nil {
@@ -212,6 +222,7 @@ func (ac *Controller) FetchTasksSubscribedByUser(c *gin.Context) {
 		},
 		services.Filter{
 			SubscribedByUserID: user.ID,
+			ApplyBlockFilter:   true,
 		},
 	)
 	if err != nil {

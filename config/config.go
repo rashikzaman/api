@@ -10,6 +10,7 @@ import (
 type envConfig struct {
 	HTTPPort              string `env:"HTTP_PORT"`
 	DBConfig              string `env:"DB_CONFIG"`
+	TestDBConfig          string `env:"TEST_DB_CONFIG"`
 	Environment           string `env:"ENVIRONMENT"`
 	SessionSecret         string `env:"SESSION_SECRET"`
 	RedisHost             string `env:"REDIS_HOST"`
@@ -33,6 +34,7 @@ func InitConfig(filepath string) (Config, error) {
 		envCfg = envConfig{
 			HTTPPort:              os.Getenv("HTTP_PORT"),
 			DBConfig:              os.Getenv("DB_CONFIG"),
+			TestDBConfig:          os.Getenv("TEST_DB_CONFIG"),
 			Environment:           os.Getenv("ENVIRONMENT"),
 			SessionSecret:         os.Getenv("SESSION_SECRET"),
 			RedisHost:             os.Getenv("REDIS_HOST"),
@@ -58,6 +60,10 @@ func (config Config) GetHTTPPort() string {
 
 func (config Config) GetDBConfig() string {
 	return config.envConfig.DBConfig
+}
+
+func (config Config) GetTestDBConfig() string {
+	return config.envConfig.TestDBConfig
 }
 
 func (config Config) GetEnvironment() string {

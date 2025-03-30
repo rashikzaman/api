@@ -67,6 +67,7 @@ type Task struct {
 	Category                *Category       `bun:"rel:belongs-to,join:category_id=id" json:"category"`
 	SubscribedUsers         []*UserTask     `bun:"rel:has-many,join:id=task_id" json:"subscribed_users"`
 	IsSubscribed            bool            `json:"is_subscribed" bun:"is_subscribed,scanonly"`
+	Blocked                 bool            `json:"blocked"`
 }
 
 type UserTask struct {

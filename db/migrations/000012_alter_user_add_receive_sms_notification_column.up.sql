@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN receive_sms_notification BOOLEAN NOT NULL DEFAULT FALSE;

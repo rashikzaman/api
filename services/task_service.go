@@ -24,6 +24,8 @@ type Filter struct {
 	SearchTerm         string
 	CreatedByUserID    uuid.UUID
 	SubscribedByUserID uuid.UUID
+	ApplyBlockFilter   bool
+	Distance           int
 }
 
 func CreateTask(
@@ -93,7 +95,7 @@ func FetchTasks(
 	if filter.Latitude != 0 && filter.Longitude != 0 {
 		query.Where(
 			"ST_DWithin(ST_MakePoint(?, ?)::geography, location::geography, ?)",
-			filter.Longitude, filter.Latitude, 5000,
+			filter.Longitude, filter.Latitude, filter.Distance*1000,
 		)
 	}
 
@@ -116,6 +118,10 @@ func FetchTasks(
 		fmt.Println(filter.SubscribedByUserID)
 		query.Join("INNER JOIN user_tasks ON user_tasks.task_id = task.id").
 			Where("user_tasks.user_id = ?", filter.SubscribedByUserID)
+	}
+
+	if filter.ApplyBlockFilter {
+		query.Where("task.blocked = FALSE")
 	}
 
 	//case-insensitive search
@@ -201,7 +207,7 @@ func WithdrawFromTask(ctx context.Context, db bun.IDB, taskID, userID uuid.UUID)
 	return err
 }
 
-func FetchSubscribersForTask(ctx context.Context, db *bun.DB, taskID uuid.UUID) ([]models.UserTask, error) {
+func FetchSubscribersForTask(ctx context.Context, db bun.IDB, taskID uuid.UUID) ([]models.UserTask, error) {
 	var userTasks []models.UserTask
 
 	query := db.NewSelect().
@@ -214,4 +220,21 @@ func FetchSubscribersForTask(ctx context.Context, db *bun.DB, taskID uuid.UUID) 
 	err := query.Scan(ctx)
 
 	return userTasks, err
+}
+
+func ApplyActionToTask(ctx context.Context, db bun.IDB, taskID uuid.UUID, action string) (*models.Task, error) {
+	task, err := FetchTaskByID(ctx, db, taskID, models.QueryParam{})
+	if err != nil {
+		return nil, err
+	}
+
+	if action == "block" {
+		task.Blocked = true
+	} else if action == "unblock" {
+		task.Blocked = false
+	}
+
+	err = models.Update(ctx, db, &task)
+
+	return &task, err
 }

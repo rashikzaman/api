@@ -75,7 +75,8 @@ func SelectByID(ctx context.Context, db bun.IDB, id uuid.UUID, model interface{}
 		Model(model)
 
 	if queryParam.Alias != "" {
-		query.Where(queryParam.Alias+".id = ?", id)
+		quotedIdentifier := fmt.Sprintf(`"%s"."id"`, queryParam.Alias)
+		query.Where(quotedIdentifier+" = ?", id)
 	} else {
 		query.Where("id = ?", id)
 	}
