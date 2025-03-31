@@ -91,7 +91,7 @@ func (ac *Controller) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.Status(http.StatusOK)
 }
 
 func (ac *Controller) FetchTasks(c *gin.Context) {

@@ -219,6 +219,7 @@ func UpdateTask(
 	existingTask.Location = models.PostgisGeometry{
 		Geometry: orb.Point{taskBody.Longitude, taskBody.Latitude}, SRID: 4326,
 	}
+	existingTask.FormattedAddress = taskBody.FormattedAddress
 	existingTask.CategoryID = taskBody.CategoryID
 	existingTask.RequiredSkills = taskBody.RequiredSkills
 	existingTask.RequiredVolunteersCount = taskBody.RequiredVolunteersCount
