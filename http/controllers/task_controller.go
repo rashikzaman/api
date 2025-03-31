@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"rashikzaman/api/models"
@@ -31,9 +32,6 @@ func (ac *Controller) CreateTask(c *gin.Context) {
 			fmt.Println(err)
 			return err
 		}
-
-		//err = services.SendSMS("+8801873980799", "hello from act-local", ac.App.Config.GetTwilioAccountSID(), ac.App.Config.GetTwilioPhoneNumber(), ac.App.Config.GetTwilioAuthToken())
-
 		return err
 	})
 
@@ -42,6 +40,8 @@ func (ac *Controller) CreateTask(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+
+	_ = SendSMS(c, ac.App.DB, float32(task.Latitude), float32(task.Longitude), ac.App.Config.GetTwilioAccountSID(), ac.App.Config.GetTwilioPhoneNumber(), ac.App.Config.GetTwilioAuthToken(), task)
 
 	c.Status(http.StatusCreated)
 }
@@ -376,4 +376,24 @@ func (ac *Controller) GetSubscribersOfTask(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, userTasks)
+}
+
+func SendSMS(ctx context.Context, db bun.IDB, latitude, longitude float32, twilioAccountSID, twilioPhoneNumber, twilioAuthToken string, task *models.Task) error {
+	userLocations, err := services.FetchNearbyUsersOfTask(ctx, db, task.ID, latitude, longitude, 10)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	for _, location := range userLocations {
+		if location.User.ReceiveSMSNotification && location.User.PhoneNumber != nil {
+			fmt.Println("sending sms to number", location.User.PhoneNumber)
+			err = services.SendSMS(*location.User.PhoneNumber, task.Title, twilioAccountSID, twilioPhoneNumber, twilioAuthToken)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

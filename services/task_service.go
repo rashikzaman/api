@@ -288,3 +288,18 @@ func ApplyActionToTask(ctx context.Context, db bun.IDB, taskID uuid.UUID, action
 
 	return &task, err
 }
+
+func FetchNearbyUsersOfTask(ctx context.Context, db bun.IDB, taskID uuid.UUID, latitude, longitude float32, distance int) ([]models.UserLocation, error) {
+	userLocations := []models.UserLocation{}
+	query := db.NewSelect().Model(&userLocations)
+	query.Where(
+		"ST_DWithin(ST_MakePoint(?, ?)::geography, location::geography, ?)",
+		longitude, latitude, distance*1000,
+	)
+
+	query.Relation("User")
+
+	err := query.Scan(ctx)
+
+	return userLocations, err
+}

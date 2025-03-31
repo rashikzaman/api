@@ -10,15 +10,16 @@ import (
 
 type User struct {
 	Base
-	ClerkID       string       `json:"clerk_id"`
-	FirstName     string       `json:"first_name"`
-	LastName      string       `json:"last_name"`
-	Email         *string      `json:"email" bun:"email,unique"`
-	PhoneNumber   *string      `json:"phone_number" bun:"phone_number,unique"`
-	DateOfBirth   *time.Time   `json:"date_of_birth"`
-	Role          string       `json:"role"`
-	Blocked       bool         `json:"blocked"`
-	UserLocations UserLocation `bun:"rel:has-one,join:id=user_id" json:"user_location"`
+	ClerkID                string       `json:"clerk_id"`
+	FirstName              string       `json:"first_name"`
+	LastName               string       `json:"last_name"`
+	Email                  *string      `json:"email" bun:"email,unique"`
+	PhoneNumber            *string      `json:"phone_number" bun:"phone_number,unique"`
+	DateOfBirth            *time.Time   `json:"date_of_birth"`
+	Role                   string       `json:"role"`
+	Blocked                bool         `json:"blocked"`
+	UserLocations          UserLocation `bun:"rel:has-one,join:id=user_id" json:"user_location"`
+	ReceiveSMSNotification bool         `json:"receive_sms_notification"`
 }
 
 type UserLocation struct {

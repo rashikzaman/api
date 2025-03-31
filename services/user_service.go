@@ -96,6 +96,7 @@ func UpdateMe(ctx context.Context, db bun.IDB, existingUser *models.User, userBo
 	existingUser.FirstName = userBody.FirstName
 	existingUser.LastName = userBody.LastName
 	existingUser.PhoneNumber = userBody.PhoneNumber
+	existingUser.ReceiveSMSNotification = userBody.ReceiveSMSNotification
 
 	err := models.Update(ctx, db, existingUser)
 
